@@ -1,6 +1,6 @@
 @Pawlog.Api_HostAddress = http://localhost:5005
 
-GET {{Pawlog.Api_HostAddress}}/weatherforecast/
+GET {{Pawlog.Api_HostAddress}}/api/entries
 Accept: application/json
 
 ###
