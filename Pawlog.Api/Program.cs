@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.FileProviders;
 using Pawlog.Api.Data;
 using Pawlog.Api.Services;
 
@@ -31,6 +32,12 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseCors(WebAppCorsPolicy);
+
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(app.Services.GetRequiredService<PhotoStorage>().RootPath),
+    RequestPath = PhotoStorage.RequestPath
+});
 
 app.UseAuthorization();
 
