@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Pawlog.Api.Data;
+using Pawlog.Api.Services;
 
 const string WebAppCorsPolicy = "WebApp";
 
@@ -9,6 +10,7 @@ builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 builder.Services.AddDbContext<PawlogDbContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("Pawlog")));
+builder.Services.AddSingleton<PhotoStorage>();
 
 builder.Services.AddCors(options =>
     options.AddPolicy(WebAppCorsPolicy, policy => policy
