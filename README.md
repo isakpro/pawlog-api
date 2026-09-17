@@ -50,9 +50,11 @@ Stoppa servern med `Ctrl + C`.
 | GET | `/api/entries/{id}` | Hämtar ett inlägg | `200`, eller `404` om det saknas |
 | POST | `/api/entries` | Skapar ett inlägg | `201` med det skapade inlägget |
 | PUT | `/api/entries/{id}` | Uppdaterar ett inlägg | `200`, eller `404` om det saknas |
+| POST | `/api/entries/{id}/photo` | Laddar upp en bild till ett inlägg | `200` med inlägget, eller `404` om det saknas |
 
 Skickas ett inlägg utan rubrik svarar API:et `400` med ett valideringsfel, inte
-`500`.
+`500`. Samma sak gäller en bild som är tom, större än 5 MB eller inte är en
+bild.
 
 ### Exempel
 
@@ -72,6 +74,17 @@ curl -X PUT http://localhost:5005/api/entries/1 \
   -d '{"date":"2026-09-16","title":"Lärde sig vänta vid dörren","story":"Satte sig utan att bli tillsagd.","trainingGoal":"Vänta innan vi går ut","goalCompleted":true}'
 ```
 
+Ladda upp en bild till inlägg 1:
+
+```bash
+curl -X POST http://localhost:5005/api/entries/1/photo \
+  -F "photo=@hund.jpg"
+```
+
+Svaret innehåller inlägget med en ifylld `photoUrl`, till exempel
+`/uploads/3f1c....jpg`. Det är en relativ sökväg, så klienten sätter ihop den
+med API-adressen: `http://localhost:5005/uploads/3f1c....jpg`.
+
 I utvecklingsläge finns även API-beskrivningen på
 http://localhost:5005/openapi/v1.json.
 
@@ -84,6 +97,18 @@ direkt.
 Vill du börja om från noll: stoppa API:et, radera `pawlog.db` och starta igen.
 
 Filen är med i `.gitignore` – den är lokal och ska inte checkas in.
+
+## Bilder
+
+Uppladdade bilder sparas som filer i `Pawlog.Api/uploads`, som skapas automatiskt
+vid start. Själva inlägget har bara sökvägen till bilden, inte bilden i sig.
+
+Bilderna hämtas sedan under `/uploads`, alltså
+`http://localhost:5005/uploads/<filnamn>`. Byts en bild ut tas den gamla filen
+bort.
+
+Även den här mappen är med i `.gitignore`, eftersom den innehåller lokala
+uppladdningar.
 
 ## CORS
 
@@ -106,6 +131,7 @@ Pawlog.Api/
   Controllers/   EntriesController - endpoints för inläggen
   Data/          PawlogDbContext och DatabaseSeeder
   Models/        DiaryEntry (databasmodell) och EntryRequest (inkommande data)
+  Services/      PhotoStorage - sparar, validerar och tar bort bilder
   Program.cs     tjänster, CORS och pipeline
 ```
 
@@ -125,6 +151,22 @@ istället för `DiaryEntry`. Då kan en klient inte sätta `Id` eller `PhotoUrl`
 de ägs av API:et. Valideringsreglerna ligger som data annotations på modellerna
 istället för som if-satser i varje endpoint.
 
+**Bilder på disk, sökvägen i databasen.** Bilderna sparas som filer och
+databasen håller bara sökvägen. Det gör att SQLite-filen inte växer med varje
+uppladdning, och webbläsaren kan hämta och cacha bilden som vilken bild som
+helst. Varje fil får ett nytt namn (en `Guid`), så att två bilder med samma
+namn inte skriver över varandra och ett filnamn från en klient inte kan peka
+utanför mappen. Bara kända bildformat tillåts.
+
+**Uppladdning som egen endpoint.** `POST` och `PUT` tar emot JSON och bilden
+går via `POST /api/entries/{id}/photo` som `multipart/form-data`. Då slipper
+inläggen skickas som base64 i JSON, och en bild kan bytas utan att resten av
+inlägget skickas om.
+
+**Relativ `photoUrl`.** Databasen sparar `/uploads/<filnamn>` istället för en
+full url. Byter API:et adress behöver inga rader i databasen ändras – klienten
+sätter ihop sökvägen med den API-adress den redan har.
+
 **CORS med `WithOrigins`, inte `AllowAnyOrigin`.** Bara kända klienter släpps in,
 och adresserna ligger i konfigurationen så att de kan ändras utan omkompilering.
 
@@ -134,6 +176,10 @@ innan de når controllern.
 
 ## Status
 
-GET, POST och PUT fungerar mot databasen och CORS är på plats. Nästa steg är en
-endpoint för filuppladdning, så att en bild kan kopplas till ett inlägg och
-visas i webbappen.
+Alla endpoints fungerar mot databasen: lista, hämta, skapa, uppdatera och ladda
+upp en bild. CORS är på plats för webbappen. Backend har därmed allt webbappen
+behöver.
+
+Nästa steg ligger i webbapp-repot: byta ut exempeldatan mot riktiga anrop hit,
+ladda upp bilden till den nya endpointen och visa ett felmeddelande i
+gränssnittet när ett anrop misslyckas.
