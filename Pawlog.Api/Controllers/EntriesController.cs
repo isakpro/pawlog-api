@@ -2,12 +2,13 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Pawlog.Api.Data;
 using Pawlog.Api.Models;
+using Pawlog.Api.Services;
 
 namespace Pawlog.Api.Controllers;
 
 [ApiController]
 [Route("api/entries")]
-public class EntriesController(PawlogDbContext db) : ControllerBase
+public class EntriesController(PawlogDbContext db, PhotoStorage photos) : ControllerBase
 {
     [HttpGet]
     public async Task<ActionResult<IEnumerable<DiaryEntry>>> GetAll()
@@ -63,6 +64,34 @@ public class EntriesController(PawlogDbContext db) : ControllerBase
         entry.GoalCompleted = request.GoalCompleted;
 
         await db.SaveChangesAsync();
+
+        return Ok(entry);
+    }
+
+    [HttpPost("{id:int}/photo")]
+    public async Task<ActionResult<DiaryEntry>> UploadPhoto(int id, IFormFile photo)
+    {
+        var entry = await db.Entries.FindAsync(id);
+
+        if (entry is null)
+        {
+            return NotFound();
+        }
+
+        var error = photos.Validate(photo);
+
+        if (error is not null)
+        {
+            ModelState.AddModelError(nameof(photo), error);
+            return ValidationProblem(ModelState);
+        }
+
+        var previousPhotoUrl = entry.PhotoUrl;
+
+        entry.PhotoUrl = await photos.SaveAsync(photo);
+        await db.SaveChangesAsync();
+
+        photos.Delete(previousPhotoUrl);
 
         return Ok(entry);
     }
