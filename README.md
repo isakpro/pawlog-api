@@ -112,17 +112,30 @@ uppladdningar.
 
 ## CORS
 
-Webbappen körs på `http://localhost:5173` och API:et på `http://localhost:5005`.
+API:et körs på `http://localhost:5005`, och två klienter anropar det från
+webbläsaren:
+
+- webbappen på `http://localhost:5173`
+- mobilappen på `http://localhost:8081`, när den körs som webbversion med
+  `npx expo start --web`
+
 Eftersom portarna skiljer sig blockerar webbläsaren anropen om inte API:et
 tillåter dem. Tillåtna adresser ligger i `appsettings.json`:
 
 ```json
 "Cors": {
-  "AllowedOrigins": ["http://localhost:5173", "http://127.0.0.1:5173"]
+  "AllowedOrigins": [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "http://localhost:8081",
+    "http://127.0.0.1:8081"
+  ]
 }
 ```
 
-Kör du webbappen på en annan port lägger du till den i listan.
+Mobilappen i Expo Go eller en emulator berörs inte av CORS, eftersom CORS bara
+tillämpas av webbläsare. Kör du en klient på en annan port lägger du till den i
+listan.
 
 ## Projektstruktur
 
