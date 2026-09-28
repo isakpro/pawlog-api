@@ -9,7 +9,7 @@ Det här repot innehåller **backend**. Den är en av tre delar i plattformen:
 | --- | --- | --- |
 | Webbapp | React + TypeScript | [WebappIsak](https://github.com/isakpro/WebappIsak) |
 | Backend / API | ASP.NET WebAPI | det här repot |
-| Mobilapp | React Native (Expo) | kommer |
+| Mobilapp | React Native (Expo) | [pawlog-app](https://github.com/isakpro/pawlog-app) |
 
 ## Kom igång
 
@@ -190,9 +190,7 @@ innan de når controllern.
 ## Status
 
 Alla endpoints fungerar mot databasen: lista, hämta, skapa, uppdatera och ladda
-upp en bild. CORS är på plats för webbappen. Backend har därmed allt webbappen
-behöver.
+upp en bild. Både webbappen och mobilappen använder API:et, och CORS släpper in
+båda när de körs i webbläsaren.
 
-Nästa steg ligger i webbapp-repot: byta ut exempeldatan mot riktiga anrop hit,
-ladda upp bilden till den nya endpointen och visa ett felmeddelande i
-gränssnittet när ett anrop misslyckas.
+Att ta bort inlägg finns inte.
